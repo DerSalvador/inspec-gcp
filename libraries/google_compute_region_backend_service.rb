@@ -14,25 +14,27 @@
 #
 # ----------------------------------------------------------------------------
 require 'gcp_backend'
+require 'google/compute/property/regionbackendservice_backends'
+require 'google/compute/property/regionbackendservice_connection_draining'
 
 # A provider to manage Compute Engine resources.
-class GlobalForwardingRule < GcpResourceBase
-  name 'google_compute_global_forwarding_rule'
-  desc 'GlobalForwardingRule'
+class RegionBackendService < GcpResourceBase
+  name 'google_compute_region_backend_service'
+  desc 'RegionBackendService'
   supports platform: 'gcp'
 
   attr_reader :params
-  attr_reader :creation_timestamp
-  attr_reader :description
-  attr_reader :id
-  attr_reader :ip_address
-  attr_reader :ip_protocol
-  attr_reader :ip_version
-  attr_reader :load_balancing_scheme
   attr_reader :name
-  attr_reader :network
-  attr_reader :port_range
-  attr_reader :target
+  attr_reader :health_checks
+  attr_reader :backends
+  attr_reader :description
+  attr_reader :fingerprint
+  attr_reader :protocol
+  attr_reader :session_affinity
+  attr_reader :region
+  attr_reader :timeout_sec
+  attr_reader :connection_draining
+  attr_reader :load_balancing_scheme
 
   def initialize(params)
     super(params.merge({ use_http_transport: true }))
@@ -42,17 +44,17 @@ class GlobalForwardingRule < GcpResourceBase
   end
 
   def parse
-    @creation_timestamp = parse_time_string(@fetched['creationTimestamp'])
-    @description = @fetched['description']
-    @id = @fetched['id']
-    @ip_address = @fetched['IPAddress']
-    @ip_protocol = @fetched['IPProtocol']
-    @ip_version = @fetched['ipVersion']
-    @load_balancing_scheme = @fetched['loadBalancingScheme']
     @name = @fetched['name']
-    @network = @fetched['network']
-    @port_range = @fetched['portRange']
-    @target = @fetched['target']
+    @health_checks = @fetched['healthChecks']
+    @backends = GoogleInSpec::Compute::Property::RegionBackendServiceBackendsArray.parse(@fetched['backends'], to_s)
+    @description = @fetched['description']
+    @fingerprint = @fetched['fingerprint']
+    @protocol = @fetched['protocol']
+    @session_affinity = @fetched['sessionAffinity']
+    @region = @fetched['region']
+    @timeout_sec = @fetched['timeoutSec']
+    @connection_draining = GoogleInSpec::Compute::Property::RegionBackendServiceConnectionDraining.new(@fetched['connectionDraining'], to_s)
+    @load_balancing_scheme = @fetched['loadBalancingScheme']
   end
 
   # Handles parsing RFC3339 time string
@@ -65,7 +67,7 @@ class GlobalForwardingRule < GcpResourceBase
   end
 
   def to_s
-    "GlobalForwardingRule #{@params[:name]}"
+    "RegionBackendService #{@params[:name]}"
   end
 
   private
@@ -75,6 +77,6 @@ class GlobalForwardingRule < GcpResourceBase
   end
 
   def resource_base_url
-    'projects/{{project}}/global/forwardingRules/{{name}}'
+    'projects/{{project}}/regions/{{region}}/backendServices/{{name}}'
   end
 end

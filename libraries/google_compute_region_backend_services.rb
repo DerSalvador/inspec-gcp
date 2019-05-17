@@ -14,26 +14,26 @@
 #
 # ----------------------------------------------------------------------------
 require 'gcp_backend'
-class GlobalForwardingRules < GcpResourceBase
-  name 'google_compute_global_forwarding_rules'
-  desc 'GlobalForwardingRule plural resource'
+class RegionBackendServices < GcpResourceBase
+  name 'google_compute_region_backend_services'
+  desc 'RegionBackendService plural resource'
   supports platform: 'gcp'
 
   attr_reader :table
 
   filter_table_config = FilterTable.create
 
-  filter_table_config.add(:creation_timestamps, field: :creation_timestamp)
-  filter_table_config.add(:descriptions, field: :description)
-  filter_table_config.add(:ids, field: :id)
-  filter_table_config.add(:ip_addresses, field: :ip_address)
-  filter_table_config.add(:ip_protocols, field: :ip_protocol)
-  filter_table_config.add(:ip_versions, field: :ip_version)
-  filter_table_config.add(:load_balancing_schemes, field: :load_balancing_scheme)
   filter_table_config.add(:names, field: :name)
-  filter_table_config.add(:networks, field: :network)
-  filter_table_config.add(:port_ranges, field: :port_range)
-  filter_table_config.add(:targets, field: :target)
+  filter_table_config.add(:health_checks, field: :health_checks)
+  filter_table_config.add(:backends, field: :backends)
+  filter_table_config.add(:descriptions, field: :description)
+  filter_table_config.add(:fingerprints, field: :fingerprint)
+  filter_table_config.add(:protocols, field: :protocol)
+  filter_table_config.add(:session_affinities, field: :session_affinity)
+  filter_table_config.add(:regions, field: :region)
+  filter_table_config.add(:timeout_secs, field: :timeout_sec)
+  filter_table_config.add(:connection_drainings, field: :connection_draining)
+  filter_table_config.add(:load_balancing_schemes, field: :load_balancing_scheme)
 
   filter_table_config.connect(self, :table)
 
@@ -73,17 +73,17 @@ class GlobalForwardingRules < GcpResourceBase
 
   def transformers
     {
-      'creationTimestamp' => ->(obj) { return :creation_timestamp, parse_time_string(obj['creationTimestamp']) },
-      'description' => ->(obj) { return :description, obj['description'] },
-      'id' => ->(obj) { return :id, obj['id'] },
-      'IPAddress' => ->(obj) { return :ip_address, obj['IPAddress'] },
-      'IPProtocol' => ->(obj) { return :ip_protocol, obj['IPProtocol'] },
-      'ipVersion' => ->(obj) { return :ip_version, obj['ipVersion'] },
-      'loadBalancingScheme' => ->(obj) { return :load_balancing_scheme, obj['loadBalancingScheme'] },
       'name' => ->(obj) { return :name, obj['name'] },
-      'network' => ->(obj) { return :network, obj['network'] },
-      'portRange' => ->(obj) { return :port_range, obj['portRange'] },
-      'target' => ->(obj) { return :target, obj['target'] },
+      'healthChecks' => ->(obj) { return :health_checks, obj['healthChecks'] },
+      'backends' => ->(obj) { return :backends, GoogleInSpec::Compute::Property::RegionBackendServiceBackendsArray.parse(obj['backends'], to_s) },
+      'description' => ->(obj) { return :description, obj['description'] },
+      'fingerprint' => ->(obj) { return :fingerprint, obj['fingerprint'] },
+      'protocol' => ->(obj) { return :protocol, obj['protocol'] },
+      'sessionAffinity' => ->(obj) { return :session_affinity, obj['sessionAffinity'] },
+      'region' => ->(obj) { return :region, obj['region'] },
+      'timeoutSec' => ->(obj) { return :timeout_sec, obj['timeoutSec'] },
+      'connectionDraining' => ->(obj) { return :connection_draining, GoogleInSpec::Compute::Property::RegionBackendServiceConnectionDraining.new(obj['connectionDraining'], to_s) },
+      'loadBalancingScheme' => ->(obj) { return :load_balancing_scheme, obj['loadBalancingScheme'] },
     }
   end
 
@@ -99,6 +99,6 @@ class GlobalForwardingRules < GcpResourceBase
   end
 
   def resource_base_url
-    'projects/{{project}}/global/forwardingRules'
+    'projects/{{project}}/regions/{{region}}/backendServices'
   end
 end
